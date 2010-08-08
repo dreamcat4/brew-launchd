@@ -1,0 +1,146 @@
+.\" -*- coding: us-ascii -*-
+.if \n(.g .ds T< \\FC
+.if \n(.g .ds T> \\F[\n[.fam]]
+.de URL
+\\$2 \(la\\$1\(ra\\$3
+..
+.if \n(.g .mso www.tmac
+.TH LAUNCHR 1 "10 August 2010" "" ""
+.SH NAME
+launchr \- A command line program to control launchd services
+.SH SYNOPSIS
+'nh
+.fi
+.ad l
+\fBlaunchr\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[
+\fBstart\fR
+| 
+\fBstop\fR
+| 
+\fBrestart\fR
+] 
+\fIservice,(s)\fR
+\&...
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBlaunchr\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+\fBinfo\fR
+[
+\fIservice,(s)\fR
+\&...]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBlaunchr\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+\fBclean\fR
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBlaunchr\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+\fBdefault\fR
+{
+\fB--user\fR
+| 
+\fB--boot\fR
+}
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBlaunchr\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[
+{
+\fB-h\fR
+| 
+\fB--help\fR
+}
+| 
+{
+\fB-v\fR
+| 
+\fB--version\fR
+}
+]
+'in \n(.iu-\nxu
+.ad b
+'hy
+.SH DESCRIPTION
+\fBlaunchr\fR manages the launchd service status of brew formula by tweaking symlinks. By default launchd plists are installed into $HOMEBREW_PREFIX/Library/LaunchDaemons. What Launchr does is overwrite those symlinks to the target LaunhDaemons folder (either user or boot). Then launchctl is called to bring the service up/down.
+.PP
+If a formula which provides a launchd service is uninstalled from brew, the service should be stopped first. If not, then the launchd database is left in an inconsistent state. Launchr has an auto clean command to deal with that situation.
+.PP
+Use sudo to install boot-time services. You can specify the formula name (will start all launchd plists associated to that formula). Or you can specify services by their Launchd job label. Multiple services can be specified. All are processed in the order specified.
+.SH OPTIONS
+.TP 
+\*(T<\fBstart \fR\*(T>\fIservice,(s)\fR 
+Start launchd \*(T<\fIservice(s)\fR\*(T>.
+.TP 
+\*(T<\fBstop \fR\*(T>\fIservice,(s)\fR 
+Stop launchd \*(T<\fIservice(s)\fR\*(T>.
+.TP 
+\*(T<\fBretart \fR\*(T>\fIservice,(s)\fR 
+Start launchd \*(T<\fIservice(s)\fR\*(T>.
+.TP 
+\*(T<\fBinfo \fR\*(T>\fI[service,(s)]\fR 
+Info for launchd \*(T<\fIservice(s)\fR\*(T>. With no arguments, print info for all installed services.
+.TP 
+\*(T<\fBclean\fR\*(T> 
+Clean missing/broken launchd services.
+.TP 
+\*(T<\fBdefault\fR\*(T> 
+Specify the default install target for Launchd services. Setting this enforces the condition, and the command will bail out if you forget to prefix with sudo 
+.TP 
+--user
+Specifically start or stop launchd service(s) at user login. Otherwise, the sudo status will be used.
+
+This option is the default target.
+.TP 
+\*(T<\fB\-\-boot\fR\*(T> 
+Specifically start or stop launchd service(s) at system boot.
+
+This can be made the default by running
+
+\*(T<\fIbrew launchd default \-\-boot\fR\*(T>
+.TP 
+\*(T<\fB\-\-help\fR\*(T> 
+Display help and usage information.
+.SH SERVICES
+.TP 
+\*(T<\fIformula_name\fR\*(T> 
+The brew formula name. This is internally expanded to a list of Launchd plists / job labels.
+.TP 
+\*(T<\fIcom.launchd.label\fR\*(T> 
+The Launchd job label name. Also the name of the plistfile. Useful when an installed formula has multiple launchd services.
+.SH BUGS
+The command name should have been chosen more carefully to reflect its purpose.
+.PP
+The upstreams BTS can be found at 
+.URL http://github.com/dreamcat4/launchr/issues ""
+\&.
+.SH "SEE ALSO"
+\fBbrew\fR(1)
+.PP
+Copyright \(co 2010 Dreamcat4. See LICENSE for details.

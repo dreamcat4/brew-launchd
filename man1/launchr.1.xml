@@ -1,0 +1,312 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?xml-stylesheet type="text/xsl"
+        href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?><!-- This document was created with Syntext Serna Free. -->
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
+
+<!-- Process this file with an XSLT processor, e.g. xsltproc:    -->
+<!-- `xsltproc \
+      -''-nonet \
+      -''-param man.charmap.use.subset "0" \
+      -''-param make.year.ranges "1" \
+      -''-param make.single.year.ranges "1" \
+      manpage.xml'                                               -->
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME.              -->
+  <!ENTITY dhfirstname "Daniel">
+  <!ENTITY dhsurname   "Leidert">
+  <!ENTITY dhemail     "daniel.leidert@wgdd.de">
+  <!-- dhusername could also be set to "&firstname; &surname;".  -->
+  <!ENTITY dhusername  "&dhfirstname; &dhsurname;">
+
+  <!-- The version information can also be suppressed (just      -->
+  <!-- remove it or comment it out.                              -->
+  <!ENTITY dhrelease   "0.1.2">
+
+  <!-- TITLE should be something like "User commands",           -->
+  <!-- "&dhpackage; command-line reference" or similar (see e.g. -->
+  <!-- http://www.tldp.org/HOWTO/Man-Page/q2.html). But limit    -->
+  <!-- the length to 30 chars.                                   -->
+  <!ENTITY dhtitle     "User Manuals">
+  
+  <!-- This is the application/package name.                     -->
+  <!ENTITY dhucpackage 'LAUNCHR'>
+  <!ENTITY dhpackage 'launchr'>
+
+  <!-- If the application e.g. belongs to a package like X.org,  -->
+  <!-- this should be set to the package/suite name instead of   -->
+  <!-- dhpackage.                                                -->
+  <!ENTITY dhproduct   "&dhpackage;">
+
+  <!-- SECTION should be 1-8, maybe w/ subsection other          -->
+  <!-- parameters are allowed: see man(7), man(1) and            -->
+  <!-- http://www.tldp.org/HOWTO/Man-Page/q2.html.               -->
+  <!ENTITY dhsection   "1">
+
+]>
+<refentry>
+  <refentryinfo>
+    <title>&dhtitle;</title>
+<!-- Better put a suite name instead of &dhpackage; into productname -->    <productname>&dhproduct;</productname>
+    <releaseinfo role="version">&dhrelease;</releaseinfo>
+    <authorgroup>
+      <author>
+        <firstname>Jens</firstname>
+        <surname>Schweikhardt</surname>
+        <contrib>Wrote this example manpage for the &quot;Linux Man Page Howto&quot;, available at <ulink url="http://www.schweikhardt.net/man_page_howto.html"/> or <ulink url="http://www.faqs.org/docs/Linux-mini/Man-Page.html"/>.</contrib>
+        <address>
+          <email>schweikh@schweikhardt.net</email>
+        </address>
+      </author>
+      <author>
+        <firstname>&dhfirstname;</firstname>
+        <surname>&dhsurname;</surname>
+        <contrib>Rewrote and extended the example manpage in DocBook XML for the Debian distribution.</contrib>
+        <address>
+          <email>&dhemail;</email>
+        </address>
+      </author>
+    </authorgroup>
+    <copyright>
+      <year>1995</year>
+      <year>1996</year>
+      <year>1997</year>
+      <year>1998</year>
+      <year>1999</year>
+      <year>2000</year>
+      <year>2001</year>
+      <year>2002</year>
+      <year>2003</year>
+      <holder>Jens Schweikhardt</holder>
+    </copyright>
+    <copyright>
+      <year>2006</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    <legalnotice>
+      <para>The Howto containing this example, was offered under the following conditions:</para>
+      <para>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</para>
+      <orderedlist>
+        <listitem>
+          <para>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</para>
+        </listitem>
+        <listitem>
+          <para>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</para>
+        </listitem>
+      </orderedlist>
+      <para>THIS SOFTWARE IS PROVIDED BY THE AUTHOR &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</para>
+    </legalnotice>
+  </refentryinfo>
+  <refmeta>
+    <refentrytitle>&dhucpackage;</refentrytitle>
+    <manvolnum>&dhsection;</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+    <refpurpose>A command line program to control launchd services</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+      <group choice="opt">
+        <arg choice="plain">
+          <option>start</option>
+        </arg>
+        <arg choice="plain">
+          <option>stop</option>
+        </arg>
+        <arg choice="plain">
+          <option>restart</option>
+        </arg>
+      </group>
+      <arg choice="plain" rep="repeat">
+        <replaceable>service,(s)</replaceable>
+      </arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+      <group choice="plain">
+        <arg choice="plain">
+          <option>info</option>
+        </arg>
+      </group>
+      <group choice="opt">
+        <arg choice="plain" rep="repeat">
+          <replaceable>service,(s)</replaceable>
+        </arg>
+      </group>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+      <group choice="plain">
+        <arg choice="plain">
+          <option>clean</option>
+        </arg>
+      </group>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+<!-- Normally the help and version options make the programs stop
+                             right after outputting the requested information. -->      <group choice="plain">
+        <arg choice="plain">
+          <option>default</option>
+          <arg choice="plain">
+            <group choice="req">
+              <arg choice="plain">
+                <option>--user</option>
+              </arg>
+              <arg choice="plain">
+                <option>--boot</option>
+              </arg>
+            </group>
+          </arg>
+        </arg>
+      </group>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+<!-- Normally the help and version options make the programs stop
+                             right after outputting the requested information. -->      <group choice="opt">
+        <arg choice="plain">
+          <group choice="req">
+            <arg choice="plain">
+              <option>-h</option>
+            </arg>
+            <arg choice="plain">
+              <option>--help</option>
+            </arg>
+          </group>
+        </arg>
+        <arg choice="plain">
+          <group choice="req">
+            <arg choice="plain">
+              <option>-v</option>
+            </arg>
+            <arg choice="plain">
+              <option>--version</option>
+            </arg>
+          </group>
+        </arg>
+      </group>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1 id="description">
+    <title>DESCRIPTION</title>
+    <para><command>&dhpackage;</command> manages the launchd service status of brew formula by tweaking symlinks. By default launchd plists are installed into $HOMEBREW_PREFIX/Library/LaunchDaemons. What Launchr does is overwrite those symlinks to the target LaunhDaemons folder (either user or boot). Then launchctl is called to bring the service up/down.</para>
+    <para>If a formula which provides a launchd service is uninstalled from brew, the service should be stopped first. If not, then the launchd database is left in an inconsistent state. Launchr has an auto  clean command to deal with that situation.</para>
+    <para>Use sudo to install boot-time services. You can specify the formula name (will start all launchd plists associated to that formula). Or you can specify services by their Launchd job label. Multiple services can be specified. All  are processed in the order specified.</para>
+  </refsect1>
+  <refsect1 id="options">
+    <title>OPTIONS</title>
+    <variablelist>
+<!-- Use the variablelist.term.separator and the
+                             variablelist.term.break.after parameters to
+                             control the term elements. -->      <varlistentry>
+        <term>
+          <option>start <replaceable class="parameter">service,(s)</replaceable></option>
+        </term>
+        <listitem>
+          <para>Start launchd <filename class="devicefile">service(s)</filename>.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>stop <replaceable class="parameter">service,(s)</replaceable></option>
+        </term>
+        <listitem>
+          <para>Stop launchd <filename class="devicefile">service(s)</filename>.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>retart <replaceable class="parameter">service,(s)</replaceable></option>
+        </term>
+        <listitem>
+          <para>Start launchd <filename class="devicefile">service(s)</filename>.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>info <replaceable class="parameter">[service,(s)]</replaceable></option>
+        </term>
+        <listitem>
+          <para>Info for launchd <filename class="devicefile">service(s)</filename>. With no arguments, print info for all installed services.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>clean</option>
+        </term>
+        <listitem>
+          <para>Clean missing/broken launchd services.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>default</option>
+        </term>
+        <listitem>
+          <para>Specify the default install target for Launchd services. Setting this enforces the condition, and the command will bail out if you forget to prefix with sudo </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>--user</term>
+        <listitem>
+          <para>Specifically start or stop launchd service(s) at user login. Otherwise, the sudo status will be used.</para>
+          <para>This option is the default target.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--boot</option>
+        </term>
+        <listitem>
+          <para>Specifically start or stop launchd service(s) at system boot.</para>
+          <para>This can be made the default by running</para>
+          <para><filename>brew launchd default --boot</filename></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <option>--help</option>
+        </term>
+        <listitem>
+          <para>Display help and usage information.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1 id="files">
+    <title>SERVICES</title>
+    <variablelist>
+      <varlistentry>
+        <term>
+          <filename>formula_name</filename>
+        </term>
+        <listitem>
+          <para>The brew formula name. This is internally expanded to a list of Launchd plists / job labels.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>
+          <filename>com.launchd.label</filename>
+        </term>
+        <listitem>
+          <para>The Launchd job label name. Also the name of the plistfile. Useful when an installed formula has multiple launchd services.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+  <refsect1 id="bugs">
+<!-- Or use this section to tell about upstream BTS. -->    <title>BUGS</title>
+    <para>The command name should have been chosen more carefully to reflect its purpose.</para>
+    <para>The upstreams <acronym>BTS</acronym> can be found at <ulink url="http://github.com/dreamcat4/launchr/issues"/>.</para>
+  </refsect1>
+  <refsect1 id="see_also">
+    <title>SEE ALSO</title>
+<!-- In alpabetical order. -->    <para><citerefentry>
+        <refentrytitle>brew</refentrytitle>
+        <manvolnum>1</manvolnum>
+      </citerefentry></para>
+    <para>Copyright © 2010 Dreamcat4. See LICENSE for details.</para>
+  </refsect1>
+</refentry>

@@ -1,0 +1,132 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>LAUNCHR</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.68.1">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="refentry" lang="en">
+<a name="id387621"></a><div class="titlepage"></div>
+<div class="refnamediv">
+<h2>Name</h2>
+<p>launchr &#8212; A command line program to control launchd services</p>
+</div>
+<div class="refsynopsisdiv">
+<h2>Synopsis</h2>
+<div class="cmdsynopsis"><p><code class="command">launchr</code>  [ 
+          <code class="option">start</code>
+          |   
+          <code class="option">stop</code>
+          |   
+          <code class="option">restart</code>
+         ]  
+        <em class="replaceable"><code>service,(s)</code></em>
+      ... </p></div>
+<div class="cmdsynopsis"><p><code class="command">launchr</code>    
+          <code class="option">info</code>
+           [ 
+          <em class="replaceable"><code>service,(s)</code></em>
+        ... ]</p></div>
+<div class="cmdsynopsis"><p><code class="command">launchr</code>    
+          <code class="option">clean</code>
+          </p></div>
+<div class="cmdsynopsis"><p><code class="command">launchr</code>    
+          <code class="option">default</code>
+            
+             { 
+                <code class="option">--user</code>
+                |   
+                <code class="option">--boot</code>
+               }
+           
+          </p></div>
+<div class="cmdsynopsis"><p><code class="command">launchr</code>  [ 
+           { 
+              <code class="option">-h</code>
+              |   
+              <code class="option">--help</code>
+             }
+          |   
+           { 
+              <code class="option">-v</code>
+              |   
+              <code class="option">--version</code>
+             }
+         ]</p></div>
+</div>
+<div class="refsect1" lang="en">
+<a name="description"></a><h2>DESCRIPTION</h2>
+<p><span><strong class="command">launchr</strong></span> manages the launchd service status of brew formula by tweaking symlinks. By default launchd plists are installed into $HOMEBREW_PREFIX/Library/LaunchDaemons. What Launchr does is overwrite those symlinks to the target LaunhDaemons folder (either user or boot). Then launchctl is called to bring the service up/down.</p>
+<p>If a formula which provides a launchd service is uninstalled from brew, the service should be stopped first. If not, then the launchd database is left in an inconsistent state. Launchr has an auto  clean command to deal with that situation.</p>
+<p>Use sudo to install boot-time services. You can specify the formula name (will start all launchd plists associated to that formula). Or you can specify services by their Launchd job label. Multiple services can be specified. All  are processed in the order specified.</p>
+</div>
+<div class="refsect1" lang="en">
+<a name="options"></a><h2>OPTIONS</h2>
+<div class="variablelist"><dl>
+<dt><span class="term">
+          <code class="option">start <em class="replaceable"><code>service,(s)</code></em></code>
+        </span></dt>
+<dd><p>Start launchd <code class="filename">service(s)</code>.</p></dd>
+<dt><span class="term">
+          <code class="option">stop <em class="replaceable"><code>service,(s)</code></em></code>
+        </span></dt>
+<dd><p>Stop launchd <code class="filename">service(s)</code>.</p></dd>
+<dt><span class="term">
+          <code class="option">retart <em class="replaceable"><code>service,(s)</code></em></code>
+        </span></dt>
+<dd><p>Start launchd <code class="filename">service(s)</code>.</p></dd>
+<dt><span class="term">
+          <code class="option">info <em class="replaceable"><code>[service,(s)]</code></em></code>
+        </span></dt>
+<dd><p>Info for launchd <code class="filename">service(s)</code>. With no arguments, print info for all installed services.</p></dd>
+<dt><span class="term">
+          <code class="option">clean</code>
+        </span></dt>
+<dd><p>Clean missing/broken launchd services.</p></dd>
+<dt><span class="term">
+          <code class="option">default</code>
+        </span></dt>
+<dd><p>Specify the default install target for Launchd services. Setting this enforces the condition, and the command will bail out if you forget to prefix with sudo </p></dd>
+<dt><span class="term">--user</span></dt>
+<dd>
+<p>Specifically start or stop launchd service(s) at user login. Otherwise, the sudo status will be used.</p>
+<p>This option is the default target.</p>
+</dd>
+<dt><span class="term">
+          <code class="option">--boot</code>
+        </span></dt>
+<dd>
+<p>Specifically start or stop launchd service(s) at system boot.</p>
+<p>This can be made the default by running</p>
+<p><code class="filename">brew launchd default --boot</code></p>
+</dd>
+<dt><span class="term">
+          <code class="option">--help</code>
+        </span></dt>
+<dd><p>Display help and usage information.</p></dd>
+</dl></div>
+</div>
+<div class="refsect1" lang="en">
+<a name="files"></a><h2>SERVICES</h2>
+<div class="variablelist"><dl>
+<dt><span class="term">
+          <code class="filename">formula_name</code>
+        </span></dt>
+<dd><p>The brew formula name. This is internally expanded to a list of Launchd plists / job labels.</p></dd>
+<dt><span class="term">
+          <code class="filename">com.launchd.label</code>
+        </span></dt>
+<dd><p>The Launchd job label name. Also the name of the plistfile. Useful when an installed formula has multiple launchd services.</p></dd>
+</dl></div>
+</div>
+<div class="refsect1" lang="en">
+<a name="bugs"></a><h2>BUGS</h2>
+<p>The command name should have been chosen more carefully to reflect its purpose.</p>
+<p>The upstreams <span class="acronym">BTS</span> can be found at <a href="http://github.com/dreamcat4/launchr/issues" target="_top">http://github.com/dreamcat4/launchr/issues</a>.</p>
+</div>
+<div class="refsect1" lang="en">
+<a name="see_also"></a><h2>SEE ALSO</h2>
+<p><span class="citerefentry"><span class="refentrytitle">brew</span>(1)</span></p>
+<p>Copyright © 2010 Dreamcat4. See LICENSE for details.</p>
+</div>
+</div></body>
+</html>
