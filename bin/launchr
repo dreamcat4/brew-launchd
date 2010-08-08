@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+
+# Get the real path if was executed as a symlink
+require 'pathname'
+LAUNCHR_BIN = Pathname.new(__FILE__).realpath
+
+
+dir = File.expand_path "../lib", File.dirname(LAUNCHR_BIN)
+$LOAD_PATH.unshift dir unless $LOAD_PATH.include?(dir)
+
+
+require 'launchr/application'
+app = Launchr::Application.new
+
+
+
+
