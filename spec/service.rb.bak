@@ -1,0 +1,421 @@
+
+require 'launchr/extend/pathname'
+
+module Launchr
+  class Service
+    class << self
+
+      def launchctl action, plist
+        `launchctl #{action} -w #{plist}`
+      end
+
+      def sudo_launchctl action, plist
+        if Launchr.superuser?
+          `sudo launchctl #{action} -w #{plist}`
+        else
+          raise "Insufficient permissions, cant sudo"
+        end
+      end
+
+      def clean_plists_in apple_launchdaemons
+        # scan through the homebrew LaunchDaemons folder and readlink (read the links if a symlink)
+        # where the 1st level symlink points to determines the service status (up/down, running etc)
+        brew_plists = Pathname.glob("#{Launchr::Path.homebrew_prefix}/Library/LaunchDaemons/*")
+        brew_plists.map! { |p| p.readlink }
+
+        # the services associated to these plists are installed, but should be in the down state
+        # as they arent symlinked into the Apple LaunchDaemons folder
+        down_brew_plists = brew_plists.select { |p| p.include? Launchr::Path.homebrew_prefix }
+
+        # scan through the Apple LaunchDaemons folder and for all plists check their real path (final destination symlink)
+        # select any plist links which point to locations in the brew tree. These should be installed and running brew services
+        launchdaemons_plists = Pathname.glob("#{apple_launchdaemons}/*")
+        brew_launchdaemons_plists = launchdaemons_plists.select { |p| p.realpath.include? Launchr::Path.homebrew_prefix }
+        # puts "launchdaemons_plists = #{launchdaemons_plists.inspect}"
+        # puts "brew_launchdaemons_plists = #{brew_launchdaemons_plists.inspect}"
+
+        # sub select (select again) any plist links which are found to be a mismatch
+        # either they are not installed anymore (rm -rf'd without stopping the service)
+        # and/or were resinstalled again so their service state is no longer matching
+        # and reflecting the entries in the launchd database (service loaded/unloaded)
+        missing_brew_launchdaemons_plists = brew_launchdaemons_plists.select do |plist|
+          !plist.realpath.exist? || down_brew_plists.include?(plist.realpath)
+        end
+
+        # puts "missing_brew_launchdaemons_plists = #{missing_brew_launchdaemons_plists.inspect}"
+
+        if !missing_brew_launchdaemons_plists.empty?
+          # if there are broken services at boot level, it requires root permissions
+          # to fix the issue. We can detect these, and ask to re-run as root
+          if !Launchr.superuser? && apple_launchdaemons == Launchr::Path.boot_launchdaemons
+            puts "Launchctl database was left in an inconsistent state"
+            puts "This happens when a formula is uninstalled, but the"
+            puts "service is not stopped."
+            puts "Run `sudo launchr info` to cleanup"
+          else
+            # repair the launchctl service status and remove the symlink
+            # from Apple's LaunchDaemons folder (we still keep a link in brew_launchdaemons)
+            missing_brew_launchdaemons_plists.each do |plist|
+              label = plist.basename(".plist")
+              # launchctl :list, label; if exit code is zero, then launchctl stop label
+              launchctl :stop, label # brew doesnt ignore the return code
+              plist.unlink # delete broken symlink
+            end
+          end
+        end
+      end
+
+      # Clean any inconcistencies between homebrew and launchctl launcd database
+      # This can happen if formula were uninstalled with 'rm -rf'
+      def cleanup
+        clean_plists_in Launchr::Path.user_launchdaemons
+        clean_plists_in Launchr::Path.boot_launchdaemons
+      end
+
+      def find_all
+        prefix = Launchr::Path.homebrew_prefix
+        installed_plists = Pathname.glob("#{prefix}/Library/LaunchDaemons/*")
+
+        formula_names = installed_plists.map do |plist|
+          plist.realpath.to_s.gsub(/^.*Cellar\/|\/.*$/,"")
+        end
+        formula_names.uniq!
+
+        services = formula_names.map do |formula|
+          find(formula)
+        end
+
+        services
+      end
+
+      # Resolve a service name to plist files, and create a new brew service object
+      # A service name can be a formula name, a formula alias, or plist filename / label
+      def find svc
+        prefix = Launchr::Path.homebrew_prefix
+        formula_name = nil
+
+        installed_plists = Pathname.glob("#{prefix}/Library/LaunchDaemons/*")
+
+        case svc
+        when /^[^\.]+$/
+          # should be a formula name, or formula alias name
+
+          if File.exists?("#{prefix}/Library/Aliases/#{svc}")
+            # its an alias
+            alias_realpath = Pathname.new("#{prefix}/Library/Aliases/#{svc}").realpath
+            formula_name = alias_realpath.basename(".rb").to_s
+          end
+
+          if File.exists?("#{prefix}/Library/Formula/#{svc}.rb")
+            # its a formula name
+            formula_name = svc
+          end
+
+          if formula_name
+            formula_plists = installed_plists.select { |p| p.realpath.include? "Cellar\/#{formula_name}" }
+            # selected_plists = formula_plists.dup ??
+            selected_plists = formula_plists.dup
+
+            jobs = formula_plists.map do |p| 
+              LaunchdJob.new :plist => p, :selected => true
+            end
+          end
+
+        else
+          # should be a launchd job label or plist filename
+          label = File.basename(svc,".plist")
+          plist_link = Pathname.new "#{prefix}/Library/LaunchDaemons/#{label}.plist"
+          if File.exists?(plist_link)
+            plist_realpath = Pathname.new(plist_link).realpath
+            formula_name = plist_realpath.to_s.gsub(/^.*Cellar\/|\/.*$/,"")
+            formula_plists = installed_plists.select { |p| p.realpath.include? "Cellar\/#{formula_name}" }
+            selected_plists = [plist_link]
+            
+            jobs = formula_plists.map do |p| 
+              selected = nil
+              (p == plist_link) ? selected = true : selected = false
+              LaunchdJob.new :plist => p, :selected => selected
+            end
+            
+          end
+        end
+
+        unless formula_name
+          # svc could be a valid service identifier, but just not installed yet. would
+          # have to grep inside all the Formula files for "launchd_plist <job_label>" definitions
+          # in order to figure that out. an expensive operation (but very cacheable)
+          puts "Couldnt find any installed service matching \"#{svc}\" (no matches)"
+          raise "Service #{svc} not found"
+        end
+
+        # Launchr::Service.new(formula_name, formula_plists, selected_plists)
+        Launchr::Service.new(formula_name, jobs)
+      end
+      
+    end
+
+    class LaunchdJob
+      attr_accessor :label, :plist, :selected
+      attr_accessor :started, :level
+
+      def plist= plist
+        @plist = plist
+        @label = plist.basename(".plist")
+      end
+
+      def level
+        if @plist
+          case @plist.readlink
+          when /Cellar/
+            # its a stopped service
+            @level = false
+          when /^\/Library\/LaunchDaemons/
+            # its a started system service
+            @level = :boot
+          when /Library\/LaunchAgents/
+            # its a started user service
+            @level = :user
+          end
+        else
+          @level = nil
+        end
+        @level
+      end
+
+
+      def started
+        !! level
+      end
+
+      def initialize *args, &blk
+        case args.first
+        when Hash
+          opts = args.first
+          opts.each do |key, value|
+            self.send "#{key}=".to_sym, value
+          end
+        else
+          raise "Unrecognized first argument: #{args.first.inspect}"
+        end
+      end
+    end
+
+    def hash
+      @name.hash
+    end
+
+    def eql? other
+      @name = other.name
+    end
+
+    attr_accessor :name, :jobs
+    attr_accessor :plists, :plist_states, :selected_plists
+
+    def initialize formula_name, jobs
+      @name = formula_name
+      @jobs = jobs
+
+      puts @jobs.inspect
+
+      @plists = jobs.map { |j| j.plist }
+      @selected_plists = jobs.map { |j| j.selected ? j.plist : nil }
+      @selected_plists.compact!
+      
+      @plist_states = []
+      @selected_plist_states = []
+      keg
+      get_service_info
+    end
+
+    def get_service_info
+      plists.each do |plist|
+        # puts plist.inspect
+        plist_readlink = Pathname.new(plist).readlink
+        case plist_readlink
+        when /Cellar/
+          # its a stopped service
+          @plist_states << :stopped
+        when /^\/Library\/LaunchDaemons/
+          # its a started system service
+          @plist_states << :started_system
+        when /Library\/LaunchAgents/
+          # its a started user service
+          @plist_states << :started_user
+        end
+      end
+
+      selected_plists.each do |plist|
+        # puts plist.inspect
+        plist_readlink = Pathname.new(plist).readlink
+        case plist_readlink
+        when /Cellar/
+          # its a stopped service
+          @selected_plist_states << :stopped
+        when /^\/Library\/LaunchDaemons/
+          # its a started system service
+          @selected_plist_states << :started_system
+        when /Library\/LaunchAgents/
+          # its a started user service
+          @selected_plist_states << :started_user
+        end
+      end
+
+    end
+
+    def launchctl action, plist
+      self.class.launchctl action, plist
+    end
+
+    def keg
+      unless @keg
+        if @plists[0]
+          keg_relative = Pathname.new(Pathname.new(@plists[0]).realpath.to_s.gsub(/\/Library\/LaunchDaemons.*/,""))
+          @keg = keg_relative.expand_path(Pathname.new(@plists[0]).dirname)
+        else
+          @keg ||= false
+        end
+      end
+      @keg
+    end
+
+    def start
+      if @selected_plists.empty?
+        puts "#{name} - Nothing to start"
+        return
+      end
+
+      # if Launchr::Config[:boot] && ! Launchr.superuser?
+      #   raise "To start a boot time service requires sudo. Use sudo start --boot"
+      # end
+
+      if Launchr.superuser? && @plist_states.include?(:started_user)
+        raise "This service is already started at user login. Stop the service first, or use restart --boot"
+      elsif @plist_states.include?(:started_system)
+        raise "This service is already started at boot. Stop the service first, or use restart --user"
+      end
+
+      if @selected_plist_states.include?(:stopped)
+        launchdaemons = nil
+        if Launchr::Config[:boot]
+          # puts "chowning #{@keg} to root:wheel"
+          @keg.chown_R "root", "wheel"
+          launchdaemons = Launchr::Path.boot_launchdaemons
+        else
+          launchdaemons = Launchr::Path.user_launchdaemons
+        end
+
+
+        @selected_plists.each_index do |i|
+          if @selected_plist_states[i] == :stopped
+            plist = Pathname.new(@selected_plists[i])
+            plist_real = plist.realpath
+            
+            target = Pathname.new("#{launchdaemons}/#{plist_real.basename.to_s}")
+            target.make_symlink(plist_real)
+
+            plist.unlink
+            plist.make_symlink(target)
+
+            launchctl :load, target
+          end
+        end
+      else
+        puts "#{name} - Already started"
+      end
+    end
+
+    def stop
+      if @selected_plists.empty?
+        puts "#{name} - Nothing to stop"
+        return
+      end
+
+      if !Launchr.superuser? && @plist_states.include?(:started_system)
+        raise "To stop a boot time service requires sudo. Use sudo stop --boot"
+      end
+
+      if @selected_plist_states.include?(:started_user) || @selected_plist_states.include?(:started_system)
+        launchdaemons = nil
+        if Launchr::Config[:boot]
+          launchdaemons = Launchr::Path.boot_launchdaemons
+        else
+          launchdaemons = Launchr::Path.user_launchdaemons
+        end
+      
+      
+        @selected_plists.each_index do |i|
+          if @selected_plist_states[i] == :started_user || @selected_plist_states[i] == :started_system
+            plist = Pathname.new(@selected_plists[i])
+            plist_real = plist.realpath
+            # puts plist.readlink.dirname.to_s.inspect
+            launchdaemons = plist.readlink.dirname.to_s
+            
+            target = Pathname.new("#{launchdaemons}/#{plist_real.basename.to_s}")
+            launchctl :unload, target
+            # catch the return code. cancel if unload failed
+            target.unlink
+            
+            pool_link = Pathname.new("#{Launchr::Path.brew_launchdaemons}/#{plist_real.basename.to_s}")
+            pool_link.unlink
+            pool_link.make_symlink(plist_real.relative_path_from(Pathname.new(Launchr::Path.brew_launchdaemons)))
+          end
+        end
+
+        if Launchr::Config[:boot]
+          # puts "chowning #{@keg} to #{@keg.parent.user}:#{@keg.parent.user}"
+          @keg.chown_R @keg.parent.user, @keg.parent.group
+        end
+        
+      else
+        puts "#{name} - Already stopped"
+      end
+    end
+    
+    def restart
+      # perhaps something is wrong here
+      stop
+      start
+    end
+
+    def labels
+      @labels ||= @plists.map { |p| File.basename(p,".plist").to_s }
+    end
+
+    def to_s
+      name
+    end
+
+    def statuslines
+      @statuslines ||= @plist_states.map do |state|
+        case state
+        when :started_system
+          "Started"
+        when :started_user
+          "Started"
+        when :stopped
+          "Stopped"
+        end
+      end
+    end
+
+    def inspect
+      out = []
+      # service installed?
+      out << "Service: #{name}"
+      plists.each_index do |i|
+        out << " #{labels[i]} " 
+        out << " "*20+statuslines[i]
+      end
+      if plists.empty?
+        out << " Installed: NO" || "Active: NO"
+      end
+      out.join("\n")
+    end
+    
+    def info
+      puts inspect
+    end
+
+  end
+end
+

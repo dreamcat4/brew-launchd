@@ -1,0 +1,101 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "BREW\-LAUNCHD" "1" "August 2010" "Homebrew" "brew"
+.
+.SH "NAME"
+\fBbrew\-launchd\fR \- Start and stop launchd services
+.
+.SH "SYNOPSIS"
+\fBbrew\fR { start | stop | restart } [\-\-user|\-\-boot] service,(s) \.\.\.
+.
+.br
+\fBbrew launchd\fR default { \-\-user | \-\-boot }
+.
+.br
+\fBbrew launchd\fR info [ service,(s) ] \.\.\.
+.
+.br
+\fBbrew launchd\fR clean
+.
+.br
+\fBbrew launchd\fR { \-\-help | \-\-version }
+.
+.P
+\-or\-
+.
+.P
+\fBlaunchr\fR { start | stop | restart | info | clean | default | \.\.\. } \fIoptions\fR \.\.\.
+.
+.SH "SERVICES"
+.
+.TP
+\fBformula_name\fR
+The brew formula name\. Internally expanded into a list of Launchd job labels\.
+.
+.TP
+\fBcom\.launchd\.job\.label[\.plist]\fR
+The name of the Launchd job label\. Also the plist filename\. Useful when a formula has installed multiple launchd services (sub\-services)\.
+.
+.SH "DESCRIPTION"
+Launchr (aka brew\-launchd) is an extension to Homebrew to start and stop Launchd services\.
+.
+.P
+The launchd service status of a brew formula is managed by symlinks\. When a formula is installed, any launchd plists are linked into \fI$HOMEBREW_PREFIX/Library/LaunchDaemons\fR\. Later, when a service is started, those symlinks are redirected to the target LaunchDaemons folder (as per \-\-user / \-\-boot)\. Launchctl is then called to bring the service up/down\.
+.
+.P
+If a running service is deleted or uninstalled, it should be stopped first with \fBbrew stop\fR\. Otherwise the launchd database will be left in a state which is inconsistent with the symlinks in \fI$HOMEBREW_PREFIX/Library/LaunchDaemons\fR\. However Launchr has an auto clean feature to recover from such situations\.
+.
+.P
+\fBSudo\fR is absolutely required to install boot\-time services\. The corresponding keg will be \fBchown \-R\'d\fR to \fBroot:wheel\fR\. This is a strict requirement of Apple\'s Launchd\. When the service is stopped, the keg is chown\'ed back to user ownership of the enclosing folder\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fBstart\fR [\-\-user|\-\-boot] service,(s) \.\.\.
+Start launchd services\. Equivalent to launchctl load \-w files\.\.\.
+.
+.TP
+\fBstop\fR [\-\-user|\-\-boot] service,(s) \.\.\.
+Stop launchd services\. Equivalent to launchctl unload \-w files\.\.\.
+.
+.TP
+\fBrestart\fR [\-\-user|\-\-boot] service,(s) \.\.\.
+Restart launchd services\.
+.
+.TP
+\fB\-\-user\fR
+Start at user login\. Otherwise, the default setting will be used\.
+.
+.TP
+\fB\-\-boot\fR
+Start at boot time\. Requires sudo / root privelidges\. Otherwise, the default setting will be used\.
+.
+.TP
+\fBinfo\fR [ service,(s) ] \.\.\.
+Info for launchd services\. With no arguments, print info for all installed services\.
+.
+.TP
+\fBclean\fR
+Clean missing/broken launchd services\.
+.
+.TP
+\fBdefault\fR { \-\-user | \-\-boot }
+Set the default target for launchd services\. Defaults to \-\-user, which will start daemons at user login (ie via Loginwindow, not ssh)\. Whearas \-\-boot will ensure all services are set to start at boot time\. This option can be overriden on a case\-by\-case basis\.
+.
+.TP
+\fB\-\-help\fR
+Show help summary
+.
+.TP
+\fB\-\-version\fR
+Print version information
+.
+.SH "BUGS"
+The upstreams BTS can be found at \fIhttp://github\.com/dreamcat4/launchr/issues\fR\.
+.
+.SH "SEE ALSO"
+brew(1), launchr(1), launchctl(1), launchd(8), launchd\.plist(5)
+.
+.SH "Author"
+Copyright (C) 2010 Dreamcat4\. See LICENSE for details\.
