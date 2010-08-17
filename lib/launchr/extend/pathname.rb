@@ -20,6 +20,7 @@ class Pathname
   end
 
   def touch
+    require 'fileutils'
     FileUtils.touch self.to_s
   end
 end
