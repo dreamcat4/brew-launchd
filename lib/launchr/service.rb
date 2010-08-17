@@ -454,7 +454,7 @@ module Launchr
         raise "To restart a service for boot time requires sudo. Use sudo brew restart --boot #{Launchr.config[:args][:restart].join(' ')}"
       end
 
-      selected_jobs.select { |job| job.started}. each do |job|
+      selected_jobs.select { |job| job.started? }. each do |job|
         if job.level == :boot && !Launchr.superuser?
           raise "To restart a running boot time service requires sudo. Use sudo brew restart #{Launchr.config[:args][:restart].join(' ')}"
         end
