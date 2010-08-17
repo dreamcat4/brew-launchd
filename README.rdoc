@@ -1,18 +1,61 @@
-= launchr
+= brew launchd
 
-launchr = launchd, event, watcher
+An extension to start and stop Launchd services.
+
+== Installation
+
+* Get the launchd core changes for homebrew (until they merge it)
+
+    brew update
+    git remote add dreamcat4 git://github.com/dreamcat4/homebrew.git
+    git fetch --no-tags dreamcat4 +issue-148-launchd:launchd-core-changes
+    git rebase launchd-core-changes
 
 == Usage
 
-    $ brew install launchr
-    $ launchr --help
-    $ brew start mysql
-    $ brew stop mysql
+    $ brew launchd --help
+    start service,(s)         Start launchd service(s)
+                              Equivalent to launchctl load -w files...
+                              Example  $ brew start dnsmasq memcached couchdb
 
-== Homebrew Integration work
+    stop service,(s)          Stop launchd service(s)
+                              Equivalent to launchctl unload -w files...
+                              Example  $ brew stop mamcached dnsmasq
 
-Some reorganisation left to do.
+    restart service,(s)       Restart launchd service(s)
+                              Example  $ brew restart couchdb
 
+      --user                    At user login.
+                                Otherwise, the default setting will be used.
+                                Example  $ brew start --user openvpn ddclient
+
+      --boot                    At boot time. Requires sudo/root privelidges.
+                                Otherwise, the default setting will be used.
+                                Example  $ sudo brew start --boot nginx mysql
+
+    info [service,(s)]        Info for launchd service(s)
+                              With no arguments prints info for all services.
+                              Example  $ brew launchd info
+
+    clean                     Clean missing/broken launchd service(s).
+                               
+                              Examples $ brew launchd clean
+                                       $ sudo brew launchd clean
+
+    default [--user|--boot]   Set the default target to start launchd services.
+                              The initial setting, --user will start daemons at
+                              user login - from the Loginwindow (not over ssh).
+                               
+                              Wheras --boot will set services to start at boot
+                              time. But be aware that brew should be installed
+                              to the root filesystem, not on a mounted volume.
+                               
+                              Examples $ brew launchd default --boot
+                                       $ brew launchd default --user
+
+    --help                    Show this message
+
+    --version                 Print version information
 
 == Copyright
 
