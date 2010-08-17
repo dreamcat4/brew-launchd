@@ -14,9 +14,10 @@ module Launchr
       summary_indent ""
       summary_width 29
 
-      header "Launchr - A command line program to control launchd services"
-      # footer "\"man launchr\" for more information on launchr"
-      # footer "Author: Dreamcat4 (dreamcat4@gmail.com)"
+      header "brew launchd - an extension to start and stop Launchd services."
+      header "              `man brew-launchd` for more information"
+      header ""
+      banner "Usage: brew launchd [options]"
 
       argument :start,
         :long  => "start service,(s)", 
@@ -46,16 +47,16 @@ module Launchr
         :long  => "--user", 
         :description => ["At user login.",
           "Otherwise, the default setting will be used."],
-        :example => "start --user openvpn ddclient znc",
+        :example => "start --user openvpn ddclient",
         :requires => Proc.new { |args| (args[:boot] ^ args[:user]) && true || raise("--boot|--user") },
         :default => nil
 
       option :boot,
         :indent => true,
         :long  => "--boot", 
-        :description => ["At boot time. Requires sudo / root privelidges.",
+        :description => ["At boot time. Requires sudo/root privelidges.",
           "Otherwise, the default setting will be used."],
-        :example => "sudo launchr start --boot nginx mysql",
+        :example => "sudo brew start --boot nginx mysql",
         :requires => Proc.new { |args| (args[:boot] ^ args[:user]) && true || raise("--boot|--user") },
         :default => nil
 
@@ -64,25 +65,30 @@ module Launchr
         :long  => "info [service,(s)]", 
         :type => Array,
         :proc => Proc.new { |l| (l == true) ? [] : l },
-        :description => ["Info for launchd service(s)","Or with no arguments, print info for all installed services."],
-        :example => "info",
+        :description => ["Info for launchd service(s)","With no arguments prints info for all services."],
+        :example => "brew launchd info",
         :default => nil
 
       argument :clean,
         :long  => "clean", 
         :description => ["Clean missing/broken launchd service(s)."],
-        :example => ["clean", "sudo launchr clean"],
+        :example => ["brew launchd clean", "sudo brew launchd clean"],
         :default => nil
 
       argument :default,
         :long  => "default [--user|--boot]",
-        :description => ["Set the default target for launchd services. Defaults to --user,",
-          "which will start daemons at user login (ie via Loginwindow, not ssh).",
-          " ","Whearas --boot will ensure all services are set to start at boot time.",
-          "This option can be overriden on a case-by-case basis."],
+        :description => [
+          "Set the default target to start launchd services.",
+          "The initial setting, --user will start daemons at",
+          "user login - from the Loginwindow (not over ssh).",
+          " ",
+          "Wheras --boot will set services to start at boot",
+          "time. But be aware that brew should be installed",
+          "to the root filesystem, not on a mounted volume."],
+
         :example => [
-          "sudo launchr default --boot # make system boot the default choice",
-          "default --user      # return to user login as the default"
+          "brew launchd default --boot",
+          "brew launchd default --user"
           ],
         :requires => Proc.new { |args| (args[:boot] ^ args[:user]) && true || raise("--boot|--user") },
         :default => nil
@@ -102,6 +108,20 @@ module Launchr
 
     def parse argv=ARGV
       parse_options(argv)
+
+      [:start,:stop,:restart].each do |cmd|
+        case config[cmd]
+        when Array
+          [:user, :boot].each do |level|
+            if config[cmd].include? "--#{level}"
+              config[level] = true
+            end
+          end
+          config[cmd] -= ["--user","--boot"]
+        end
+      end
+
+      raise "Please choose one of --user|--boot" if config[:user] && config[:boot]
 
       unless filtered_argv.empty?
         start_stop_restart_value = [config[:start],config[:stop],config[:restart],config[:info]].compact!

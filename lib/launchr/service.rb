@@ -8,11 +8,11 @@ module Launchr
   class Service
     class << self
       def sudo_launchctl_exec *args
-        popen  "/usr/bin/sudo", "/bin/launchctl", *args
+        popen "/usr/bin/sudo", "/bin/launchctl", *args
       end
 
       def launchctl_exec *args
-        popen  "/bin/launchctl", *args
+        popen "/bin/launchctl", *args
       end
 
       def popen cmd, *args
@@ -42,24 +42,48 @@ module Launchr
         return { :cmd => cmd, :status => status, :stdout => stdout_result, :stderr => stderr_result }
       end
 
-      def launchctl action, plist
-        job = plist
+      def launchctl action, job, sudo=nil
+        result = nil
+
         case job
-        when String, Pathname
+        when String
+          job = LaunchdJob.new :plist => Pathname.new(job)
+        when Pathname
+          job = LaunchdJob.new :plist => job
         when LaunchdJob
         else
+          raise "unrecognized argument"
+        end
+
+        args = []
+        case action
+        when :start, :stop, :remove
+          args << job.label
+        when :list
+          args << "-x" << job.label
+        when :load, :unload
+          args << "-w" << job.plist.readlink
+        when :list
+          args << job.label
+        else
+          raise "unsupported launchctl cmd"
         end
         
-        result = launchctl_exec action.to_s, "-w", plist.to_s
-        puts result[:stdout] unless result[:stdout].empty?
-        puts result[:stderr] unless result[:stderr].empty?
+        if sudo || job.level == :boot
+          result = sudo_launchctl_exec action.to_s, *args
+        else
+          result = launchctl_exec action.to_s, *args
+        end
+
+        # puts result[:stdout] unless result[:stdout].empty?
+        # puts result[:stderr] unless result[:stderr].empty?
+        result
       end
 
-      def sudo_launchctl action, plist
+      def sudo_launchctl action, job
         if Launchr.superuser?
-          result = sudo_launchctl_exec action.to_s, "-w", plist.to_s
-          puts result[:stdout] unless result[:stdout].empty?
-          puts result[:stderr] unless result[:stderr].empty?
+          sudo = true
+          launchctl action, job, sudo
         else
           raise "Insufficient permissions, cant sudo"
         end
@@ -88,28 +112,28 @@ module Launchr
               broken.unlink
 
             when /^\/Library\/LaunchDaemons/
-              broken.unlink
-              if match
-                if !Launchr.superuser?
-                  puts "Launchctl database was left in an inconsistent state"
-                  puts "This happens when a formula is uninstalled, but the"
-                  puts "service was not stopped."
-                  puts "Run `sudo launchr clean` to cleanup"
-                else
-                  target = Launchr::Path.boot_launchdaemons + broken.basename
-                  target.make_symlink(match)
-                  launchctl :stop, target.basename(".plist")
-                  target.unlink
+              if !Launchr.superuser?
+                puts "Launchctl database was left in an inconsistent state"
+                puts "This happens when a formula is uninstalled, but the"
+                puts "service was not stopped. To cleanup run the command"
+                puts "`sudo brew launchd clean`"
+              else
+                target = Launchr::Path.boot_launchdaemons + broken.basename
+                target.make_symlink(match)
+                launchctl :stop, broken
+                target.unlink
+                broken.unlink
+                if match
                   broken.make_symlink(match)
                 end
               end
             when /Library\/LaunchAgents/
+              target = Launchr::Path.user_launchdaemons + broken.basename
+              target.make_symlink(match)
+              launchctl :stop, broken
+              target.unlink
               broken.unlink
               if match
-                target = Launchr::Path.user_launchdaemons + broken.basename
-                target.make_symlink(match)
-                launchctl :stop, target.basename(".plist")
-                target.unlink
                 broken.make_symlink(match)
               end
             end
@@ -145,15 +169,13 @@ module Launchr
           if !Launchr.superuser? && apple_launchdaemons == Launchr::Path.boot_launchdaemons
             puts "Launchctl database was left in an inconsistent state"
             puts "This happens when a formula is uninstalled, but the"
-            puts "service was not stopped."
-            puts "Run `sudo launchr clean` to cleanup"
+            puts "service was not stopped. To cleanup run the command"
+            puts "`sudo brew launchd clean`"
           else
             # repair the launchctl service status and remove the symlink
             # from Apple's LaunchDaemons folder (we still keep a link in brew_launchdaemons)
             missing_brew_launchdaemons_plists.each do |plist|
-              label = plist.basename(".plist")
-              # launchctl :list, label; if exit code is zero, then launchctl stop label
-              launchctl :stop, label # brew doesnt ignore the return code
+              launchctl :stop, plist # ignore the return code
               plist.unlink # delete broken symlink
             end
           end
@@ -307,8 +329,12 @@ module Launchr
       @keg  = keg
     end
 
-    def launchctl action, plist
-      self.class.launchctl action, plist
+    def launchctl action, job
+      self.class.launchctl action, job
+    end
+
+    def sudo_launchctl action, job
+      self.class.sudo_launchctl action, job
     end
 
     def keg
@@ -342,13 +368,13 @@ module Launchr
       end
 
       if Launchr.config[:boot] && ! Launchr.superuser?
-        raise "To start a boot time service requires sudo. Use sudo start --boot"
+        raise "To start a boot time service requires sudo. Use sudo brew start --boot #{Launchr.config[:args][:start].join(' ')}"
       end
 
       launchdaemons = nil
       unless selected_stopped_jobs.empty?
         if Launchr.config[:boot]
-          puts "chowning #{@keg} to root:wheel"
+          puts "Chowning #{@keg} to root:wheel"
           @keg.chown_R "root", "wheel"
           launchdaemons = Launchr::Path.boot_launchdaemons
         else
@@ -358,9 +384,9 @@ module Launchr
 
       selected_jobs.each do |job|
         if Launchr.superuser? && job.level == :user
-          raise "#{job.label} is already started at user login. Stop the service first, or use restart --boot"
+          raise "#{job.label} is already started at user login. Stop the service first, or sudo brew restart --boot"
         elsif job.level == :boot
-          raise "#{job.label} is already started at boot. Stop the service first, or use restart --user"
+          raise "#{job.label} is already started at boot. Stop the service first, or brew restart --user"
         end
         
         if !job.started?
@@ -370,7 +396,19 @@ module Launchr
           job.plist.unlink
           job.plist.make_symlink(target)
 
-          launchctl :load, target
+          result = nil
+          if Launchr.config[:boot]
+            result = sudo_launchctl :load, job
+          else
+            result = launchctl :load, job
+          end
+
+          if result[:status].exitstatus != 0
+            puts "Launchctl exited with code #{result[:status].exitstatus} when trying to start \"#{job.label}\""
+            puts result[:stdout] unless result[:stdout].empty?
+            puts result[:stderr] unless result[:stderr].empty?
+          end
+
         end
       end
     end
@@ -384,11 +422,16 @@ module Launchr
       selected_jobs.each do |job|
         if job.started?
           if job.level == :boot && !Launchr.superuser?
-            raise "To stop a boot time service requires sudo. Use sudo stop --boot"
+            raise "To stop a boot time service requires sudo. Use sudo brew stop #{Launchr.config[:args][:stop].join(' ')}"
           end
-          
-          launchctl :unload, job.plist.readlink
-          # catch the return code. cancel if the unload has failed
+
+          result = launchctl :unload, job
+
+          if result[:status].exitstatus != 0
+            puts "Launchctl exited with code #{result[:status].exitstatus} when trying to stop \"#{job.label}\""
+            puts result[:stdout] unless result[:stdout].empty?
+            puts result[:stderr] unless result[:stderr].empty?
+          end
 
           source = job.plist.realpath
           job.plist.readlink.unlink
@@ -400,22 +443,32 @@ module Launchr
 
       if Launchr.superuser? && @jobs.select { |job| job.level == :boot }.empty?
         if @keg.user == "root"
-          puts "chowning #{@keg} to #{@keg.parent.user}:#{@keg.parent.user}"
+          puts "Chowning #{@keg} to #{@keg.parent.user}:#{@keg.parent.group}"
           @keg.chown_R @keg.parent.user, @keg.parent.group
         end
       end
     end
     
     def restart
+      if Launchr.config[:boot] && ! Launchr.superuser?
+        raise "To restart a service for boot time requires sudo. Use sudo brew restart --boot #{Launchr.config[:args][:restart].join(' ')}"
+      end
+
+      selected_jobs.select { |job| job.started}. each do |job|
+        if job.level == :boot && !Launchr.superuser?
+          raise "To restart a running boot time service requires sudo. Use sudo brew restart #{Launchr.config[:args][:restart].join(' ')}"
+        end
+      end
+
       stop
       start
     end
 
     def self.header
       out = []
-      out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "Service", "Launchd job", "Status", "Level")
-      out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "-------", "-----------", "------", "-----")
-      # out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "=======", "===========", "======", "=====")
+      out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "Service", "Launchd job label", "Status", "Level")
+      out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "-------", "-----------------", "------", "-----")
+      # out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "=======", "=================", "======", "=====")
       out.join("\n")
     end
 

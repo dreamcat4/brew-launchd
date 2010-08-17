@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 # Put back the command name onto ARGV
-launchr_subcommand = File.basename(__FILE__).gsub(/brew-|\.rb$/,"")
+launchr_subcommand = File.basename(__FILE__).gsub(/^brew-|\.rb$/,"")
 unless ["launchd"].include?(launchr_subcommand)
   ARGV.unshift launchr_subcommand
 end

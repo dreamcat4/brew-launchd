@@ -21,12 +21,6 @@
 .br
 \fBbrew launchd\fR { \-\-help | \-\-version }
 .
-.P
-\-or\-
-.
-.P
-\fBlaunchr\fR { start | stop | restart | info | clean | default | \.\.\. } \fIoptions\fR \.\.\.
-.
 .SH "SERVICES"
 .
 .TP
@@ -38,13 +32,13 @@ The brew formula name\. Internally expanded into a list of Launchd job labels\.
 The name of the Launchd job label\. Also the plist filename\. Useful when a formula has installed multiple launchd services (sub\-services)\.
 .
 .SH "DESCRIPTION"
-Launchr (aka brew\-launchd) is an extension to Homebrew to start and stop Launchd services\.
+Brew\-launchd is an extension to Homebrew to start and stop Launchd services\.
 .
 .P
 The launchd service status of a brew formula is managed by symlinks\. When a formula is installed, any launchd plists are linked into \fI$HOMEBREW_PREFIX/Library/LaunchDaemons\fR\. Later, when a service is started, those symlinks are redirected to the target LaunchDaemons folder (as per \-\-user / \-\-boot)\. Launchctl is then called to bring the service up/down\.
 .
 .P
-If a running service is deleted or uninstalled, it should be stopped first with \fBbrew stop\fR\. Otherwise the launchd database will be left in a state which is inconsistent with the symlinks in \fI$HOMEBREW_PREFIX/Library/LaunchDaemons\fR\. However Launchr has an auto clean feature to recover from such situations\.
+If a running service is deleted or uninstalled, it should be stopped first with \fBbrew stop\fR\. Otherwise the launchd database will be left in a state which is inconsistent with the symlinks in \fI$HOMEBREW_PREFIX/Library/LaunchDaemons\fR\. However the auto clean feature will recover from the majority of such situations\.
 .
 .P
 \fBSudo\fR is absolutely required to install boot\-time services\. The corresponding keg will be \fBchown \-R\'d\fR to \fBroot:wheel\fR\. This is a strict requirement of Apple\'s Launchd\. When the service is stopped, the keg is chown\'ed back to user ownership of the enclosing folder\.
@@ -92,10 +86,10 @@ Show help summary
 Print version information
 .
 .SH "BUGS"
-The upstreams BTS can be found at \fIhttp://github\.com/dreamcat4/launchr/issues\fR\.
+The upstreams BTS can be found at \fIhttp://github\.com/dreamcat4/brew\-launchd/issues\fR\.
 .
 .SH "SEE ALSO"
-brew(1), launchr(1), launchctl(1), launchd(8), launchd\.plist(5)
+brew(1), launchctl(1), launchd(8), launchd\.plist(5)
 .
 .SH "Author"
 Copyright (C) 2010 Dreamcat4\. See LICENSE for details\.

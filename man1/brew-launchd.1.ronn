@@ -9,10 +9,6 @@ brew-launchd(1) -- Start and stop launchd services
 `brew launchd` clean  
 `brew launchd` { --help | --version }  
 
--or-
-
-`launchr` { start | stop | restart | info | clean | default | ... } [options] ...  
-
 ## SERVICES
 
   * `formula_name`:
@@ -23,7 +19,7 @@ brew-launchd(1) -- Start and stop launchd services
 
 ## DESCRIPTION
 
-Launchr (aka brew-launchd) is an extension to Homebrew to start and stop Launchd services.
+Brew-launchd is an extension to Homebrew to start and stop Launchd services.
 
 The launchd service status of a brew formula is managed by symlinks. When a formula is installed, any launchd plists are linked into _$HOMEBREW_PREFIX/Library/LaunchDaemons_. Later, when a service is started, those symlinks are redirected to the target LaunchDaemons folder (as per --user / --boot). Launchctl is then called to bring the service up/down.
 
@@ -64,10 +60,10 @@ If a running service is deleted or uninstalled, it should be stopped first with 
     Print version information
 
 ## BUGS
-  The upstreams BTS can be found at <http://github.com/dreamcat4/launchr/issues>.
+  The upstreams BTS can be found at <http://github.com/dreamcat4/brew-launchd/issues>.
 
 ## SEE ALSO
- brew(1), launchr(1), launchctl(1), launchd(8), launchd.plist(5)
+ brew(1), launchctl(1), launchd(8), launchd.plist(5)
 
 ## Author
 

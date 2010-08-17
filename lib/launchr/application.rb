@@ -22,14 +22,3 @@ module Launchr
 end
 
 
-# todo
-"
-
-* Rework launchr -> brew-launchd
-
-* Launchctl -> Popen4
-
-"
-
-
-

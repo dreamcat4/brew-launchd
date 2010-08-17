@@ -82,10 +82,6 @@
 <code>brew launchd</code> clean<br />
 <code>brew launchd</code> { --help | --version }</p>
 
-<p>-or-</p>
-
-<p><code>launchr</code> { start | stop | restart | info | clean | default | ... } <a href="#OPTIONS" title="OPTIONS" data-bare-link="true">options</a> ...</p>
-
 <h2 id="SERVICES">SERVICES</h2>
 
 <dl>
@@ -96,11 +92,11 @@
 
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
 
-<p>Launchr (aka brew-launchd) is an extension to Homebrew to start and stop Launchd services.</p>
+<p>Brew-launchd is an extension to Homebrew to start and stop Launchd services.</p>
 
 <p>The launchd service status of a brew formula is managed by symlinks. When a formula is installed, any launchd plists are linked into <em>$HOMEBREW_PREFIX/Library/LaunchDaemons</em>. Later, when a service is started, those symlinks are redirected to the target LaunchDaemons folder (as per --user / --boot). Launchctl is then called to bring the service up/down.</p>
 
-<p>If a running service is deleted or uninstalled, it should be stopped first with <code>brew stop</code>. Otherwise the launchd database will be left in a state which is inconsistent with the symlinks in <em>$HOMEBREW_PREFIX/Library/LaunchDaemons</em>. However Launchr has an auto clean feature to recover from such situations.</p>
+<p>If a running service is deleted or uninstalled, it should be stopped first with <code>brew stop</code>. Otherwise the launchd database will be left in a state which is inconsistent with the symlinks in <em>$HOMEBREW_PREFIX/Library/LaunchDaemons</em>. However the auto clean feature will recover from the majority of such situations.</p>
 
 <p><code>Sudo</code> is absolutely required to install boot-time services. The corresponding keg will be <code>chown -R'd</code> to <code>root:wheel</code>. This is a strict requirement of Apple's Launchd. When the service is stopped, the keg is chown'ed back to user ownership of the enclosing folder.</p>
 
@@ -122,11 +118,11 @@
 
 <h2 id="BUGS">BUGS</h2>
 
-<p>  The upstreams BTS can be found at <a href="http://github.com/dreamcat4/launchr/issues" data-bare-link="true">http://github.com/dreamcat4/launchr/issues</a>.</p>
+<p>  The upstreams BTS can be found at <a href="http://github.com/dreamcat4/brew-launchd/issues" data-bare-link="true">http://github.com/dreamcat4/brew-launchd/issues</a>.</p>
 
 <h2 id="SEE-ALSO">SEE ALSO</h2>
 
-<p> <span class="man-ref">brew<span class="s">(1)</span></span>, <a href="launchr.1.html" class="man-ref">launchr<span class="s">(1)</span></a>, <span class="man-ref">launchctl<span class="s">(1)</span></span>, <span class="man-ref">launchd<span class="s">(8)</span></span>, <span class="man-ref">launchd.plist<span class="s">(5)</span></span></p>
+<p> <span class="man-ref">brew<span class="s">(1)</span></span>, <span class="man-ref">launchctl<span class="s">(1)</span></span>, <span class="man-ref">launchd<span class="s">(8)</span></span>, <span class="man-ref">launchd.plist<span class="s">(5)</span></span></p>
 
 <h2 id="Author">Author</h2>
 

@@ -63,7 +63,7 @@ module Launchr
       if services.empty?
 
         level = Launchr.config[:boot] ? "--boot" : "--user"
-        puts "Launchd default is #{level}"
+        puts "Launchd default target: #{level}"
         puts ""
 
         services = Launchr::Service.find_all
