@@ -111,7 +111,7 @@ module Launchr
     end
 
     def version value
-      puts "Launchr (for Brew) v#{Launchr.version}"
+      puts "Launchd commands (for Brew) v#{Launchr.version}"
     end
   end
 end
