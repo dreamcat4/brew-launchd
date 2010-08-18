@@ -404,7 +404,11 @@ module Launchr
           end
 
           if result[:status].exitstatus != 0
-            puts "Launchctl exited with code #{result[:status].exitstatus} when trying to start \"#{job.label}\""
+            if result[:status].exitstatus
+              puts "Launchctl exited with code #{result[:status].exitstatus} when trying to stop \"#{job.label}\""
+            else
+              puts "Launchctl terminated unexpectedly with #{result[:status].inspect}"
+            end
             puts result[:stdout] unless result[:stdout].empty?
             puts result[:stderr] unless result[:stderr].empty?
           end
@@ -428,7 +432,11 @@ module Launchr
           result = launchctl :unload, job
 
           if result[:status].exitstatus != 0
-            puts "Launchctl exited with code #{result[:status].exitstatus} when trying to stop \"#{job.label}\""
+            if result[:status].exitstatus
+              puts "Launchctl exited with code #{result[:status].exitstatus} when trying to stop \"#{job.label}\""
+            else
+              puts "Launchctl terminated unexpectedly with #{result[:status].inspect}"
+            end
             puts result[:stdout] unless result[:stdout].empty?
             puts result[:stderr] unless result[:stderr].empty?
           end
@@ -468,7 +476,6 @@ module Launchr
       out = []
       out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "Service", "Launchd job label", "Status", "Level")
       out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "-------", "-----------------", "------", "-----")
-      # out << sprintf("%-20.20s %-30.30s %-10.10s %-20.20s", "=======", "=================", "======", "=====")
       out.join("\n")
     end
 
