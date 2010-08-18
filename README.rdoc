@@ -7,6 +7,7 @@ An extension to start and stop Launchd services.
 * Get the launchd core changes for homebrew (until they merge it)
 
     brew update
+    git config core.whitespace nowarn
     git remote add dreamcat4 git://github.com/dreamcat4/homebrew.git
     git fetch --no-tags dreamcat4 +issue-148-launchd:launchd-core-changes
     git rebase launchd-core-changes
