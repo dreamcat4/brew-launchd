@@ -37,3 +37,8 @@ pkg
 #
 # For vim:
 #*.swp
+
+ext/*.o
+ext/launchd-socket-listener-unload
+
+
