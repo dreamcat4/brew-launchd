@@ -39,6 +39,5 @@ pkg
 #*.swp
 
 ext/*.o
-ext/launchd-socket-listener-unload
 
 
