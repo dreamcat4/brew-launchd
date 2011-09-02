@@ -19,7 +19,10 @@ installation, heres how to install seperately.
     
     # Report on installed services
     $ bin/brew launchd info
-    
+
+    # View the redis formula
+    $bin/brew edit redis
+
     # Further Help
     $ man brew-launchd
     $ bin/brew launchd --help
