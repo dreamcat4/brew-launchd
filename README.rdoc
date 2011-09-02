@@ -2,7 +2,29 @@
 
 An extension to start and stop Launchd services.
 
-== Installation
+== Quick try out
+
+Tip: if you dont want to mess with your current homebrew
+installation, heres how to install seperately.
+
+    $ git clone https://dreamcat4@github.com/dreamcat4/homebrew.git
+    $ cd homebrew
+    $ git checkout issue-148-launchd
+    
+    # Example
+    $ bin/brew install redis
+    $ bin/brew start redis
+    $ telnet localhost 6379 # (See if redis is running)
+    $ bin/brew stop redis
+    
+    # Report on installed services
+    $ bin/brew launchd info
+    
+    # Further Help
+    $ man brew-launchd
+    $ bin/brew launchd --help
+
+== How to rebase changes onto homebrew-master
 
 * Get the launchd core changes for homebrew (until they merge it)
 
